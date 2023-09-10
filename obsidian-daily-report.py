@@ -7,18 +7,30 @@ PROJECTS_DIR = "."
 VAULT_DIR = "worklog"
 report_date = datetime.datetime.today()
 
-def write_report(file_path: str, report: str):
-    print(file_path, report)
-    # return
+def write_report(file_path: str, report: list[str]):
+    lines: list[str] = []
+    daily_file_has_notes = os.path.isfile(file_path)
+    if daily_file_has_notes:
+        with open(file_path, "r", encoding='utf-8') as f:
+            lines = [l.strip() for l in set(f.readlines())]
 
-    with open(file_path, "a") as f:
-        daily_file_has_notes = os.path.isfile(file_path)
+    new_lines = [l for l in report if l not in lines]
+
+    if len(new_lines) == 0:
+        print("Report already present")
+        return
+
+    with open(file_path, "a", encoding='utf-8', newline=os.linesep) as f:
         if daily_file_has_notes:
-            f.write(f"\r\n---\r\n")
+            print('', file=f)
+            print('', file=f)
+            print('---', file=f)
+            print('', file=f)
         
-        f.write(f"{report}\r\n")
+        for line in new_lines:
+            print(line, file=f)
 
-def write_to_obsidian(vault_dir: str, report: str):
+def write_to_obsidian(vault_dir: str, report: list[str]):
     if not os.path.exists(vault_dir):
         raise Exception(f'No Obsidian vault present: {vault_dir}')
     
@@ -41,17 +53,16 @@ def write_repo_stat_to_obsidian(repo_dir: str, vault_dir: str):
         f'--until={report_date.strftime("%Y-%m-%d")} 23:59:59'
         ]
     
-    # git_command = ["git", "log"]
-    
     git_output = subprocess.check_output(git_command, cwd=repo_dir)
 
     if git_output is None:
         return
 
-    commits_list = git_output.decode('utf-8').strip().split('\r\n')
+    commits_list = [l.strip() for l in git_output.decode('utf-8').split('\n')
+                    if len(l) > 0]
     commits_list.sort()
 
-    report = "\r\n".join(set(commits_list))
+    report = set(commits_list)
 
     write_to_obsidian(vault_dir, report)
 
