@@ -1,0 +1,6 @@
+.venv
+.idea
+**/.env
+**/.aws
+**/.ssh
+data
