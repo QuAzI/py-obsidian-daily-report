@@ -1,0 +1,1 @@
+CLI tool to track activities (git commits) into Obsidian daily notes
